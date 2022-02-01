@@ -1,0 +1,24 @@
+{
+  "name": "the-responsible-object",
+  "version": "1.0.0",
+  "description": "Visual Essay",
+  "main": "src/js/index.js",
+  "scripts": {
+    "start": "parcel src/index.html --open",
+    "clean": "rm -rf dist/*",
+    "build:parcel": "parcel build src/index.html --no-content-hash --no-minify --no-source-maps --public-url ./",
+    "build": "npm run clean && npm run build:parcel",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "animejs": "^3.2.1",
+    "debounce": "^1.2.1",
+    "parcel-bundler": "^1.12.5",
+    "xwiper": "^2.2.1"
+  },
+  "devDependencies": {
+    "sass": "^1.49.0"
+  }
+}
