@@ -1,6 +1,7 @@
 html,
 body {
   height: 100%;
+  overscroll-behavior-y: contain;
 }
 
 html {
@@ -39,6 +40,7 @@ p {
   font-weight: 300;
   font-size: 1.317715vw;
   overflow: hidden;
+  margin: 0;
 }
 
 p span {
@@ -47,30 +49,29 @@ p span {
   overflow: hidden;
 }
 
-p div {
-  transform: translateY(100%);
-  transition: transform 1s cubic-bezier(0.73, 0, 0.13, 1);
-}
-
-p.--is-visible div {
-  transform: translateY(0);
-}
-
 p.-feat {
   font-family: "Averia Serif Libre", serif;
   font-weight: 300;
   font-size: 3.0746705vw;
-  margin-top: 0.42em;
-  margin-bottom: 0.42em;
 }
 
-p.-feat span {
-  white-space: nowrap;
+p + p {
+  margin-top: 0.42em;
 }
 
 figure {
   margin: 0;
   background: #000;
+}
+
+.oh {
+  overflow: hidden;
+}
+
+.line {
+  transform: translateY(-150%);
+  transform-origin: 0 50%;
+  will-change: transform;
 }
 
 .topbar {
@@ -216,12 +217,16 @@ figure {
 .screen.is-showing--prev {
   position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .screen.is-showing--next,
 .screen.is-hidding--prev {
   position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
 }
 
 .content .col-l {
@@ -321,14 +326,14 @@ figure {
   padding: 112px 32px 32px;
   background: #fff;
   clip-path: inset(0 0% 0 0);
-  transition: clip-path 0.6s ease-in-out;
+  transition: clip-path 0.4s ease-in-out;
 }
 
 /* .chapter .screen .look:hover ~ .heading {
     clip-path: inset(0 0 100% 0);
 } */
 .chapter .screen .look:hover ~ .content {
-  clip-path: inset(0 100% 0 0);
+  clip-path: inset(0 50% 0 50%);
 }
 
 .chapter .screen .content hr {
