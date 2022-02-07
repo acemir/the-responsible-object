@@ -1,32 +1,14 @@
 import "../scss/main.scss";
-
 import anime from 'animejs/lib/anime.es.js';
 
-// import Xwiper from 'xwiper';
+import Xwiper from 'xwiper';
 import { debounce } from "debounce";
+import { TextLinesReveal } from "./textLinesReveal";
 
-// const xwiper = new Xwiper('main');
+const xwiper = new Xwiper('main');
 
-// xwiper.onSwipeLeft(() => console.log('swipe left'));
-
-// xwiper.onSwipeRight(() => console.log('swipe right'));
-
-// xwiper.onSwipeUp(() => console.log('swipe up'));
-
-// xwiper.onSwipeDown(() => console.log('swipe down'));
-
-// xwiper.onTap(() => console.log('tap'));
-
-// // Remove listener
-// xwiper.destroy();
-
-
-// window.addEventListener('wheel', debounce(function(e) {
-//     console.log(e);
-// },150))
-
-// START IN HASH
 window.history.scrollRestoration = 'manual';
+const revealChapters = {};
 const defaultChapter = '#introduction';
 let $activeChapter = window.location.hash && document.querySelector(window.location.hash);
 if (!$activeChapter) {
@@ -41,14 +23,11 @@ if (!$activeChapter) {
 }
 
 let $activeScreen = $activeChapter.querySelector('.screen-1');
-$activeChapter.classList.add('is-active');
-$activeScreen.classList.add('is-active');
 
 let $topbar = document.querySelector('.topbar');
 let $nav = $topbar.querySelector('nav');
-$nav.querySelector('[href="'+ window.location.hash +'"]').classList.add('is-active');
-
 let $navAchors = $nav.querySelectorAll('[href]');
+$nav.querySelector('[href="'+ window.location.hash +'"]').classList.add('is-active');
 
 function topbarScrollHandler(e) {
     $topbar.classList.remove('is-sticky');
@@ -64,8 +43,6 @@ function screenScrollHandler(e) {
     allowNavPrev = window.scrollY == 0;
     allowNavNext = (window.innerHeight + window.scrollY) >= document.body.scrollHeight;
 }
-document.addEventListener('scroll', screenScrollHandler);
-screenScrollHandler();
 
 function screenWheelNavHandler(e) {
     if (!isNavTransition && allowNavPrev && e.deltaY < 0) {
@@ -84,10 +61,55 @@ function screenWheelNavHandler(e) {
 }
 document.addEventListener('wheel', debounce(screenWheelNavHandler, 150, true));
 
+xwiper.onSwipeUp(function(e) {
+    if (!isNavTransition && allowNavNext) {
+        if ($activeScreen.nextElementSibling) {
+            screenNavigateNext();
+        } else if ($activeChapter.nextElementSibling) {
+            screenNavigateNext(true);
+        }
+    }
+});
+
+xwiper.onSwipeDown(function(e) {
+    if (!isNavTransition && allowNavPrev) {
+        if ($activeScreen.previousElementSibling) {
+            screenNavigatePrev()
+        } else if ($activeChapter.previousElementSibling) {
+            screenNavigatePrev(true)
+        }
+    }
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.key == 'ArrowUp' || event.key == 'PageUp') {
+        if (!isNavTransition && allowNavPrev) {
+            if ($activeScreen.previousElementSibling) {
+                screenNavigatePrev()
+            } else if ($activeChapter.previousElementSibling) {
+                screenNavigatePrev(true)
+            }
+        }
+    } else if (event.key == 'ArrowDown' || event.key == 'PageDown') {
+        if (!isNavTransition && allowNavNext) {
+            if ($activeScreen.nextElementSibling) {
+                screenNavigateNext();
+            } else if ($activeChapter.nextElementSibling) {
+                screenNavigateNext(true);
+            }
+        }
+    }
+});
+
 function screenNavigateNext(withChapter) {
     isNavTransition = true;
-
+    
     const $screenToShow = withChapter ? $activeChapter.nextElementSibling.children[0] : $activeScreen.nextElementSibling;
+    
+    const revealIdToHide = $activeChapter.id + [...$activeScreen.parentElement.children].indexOf($activeScreen);
+    const revealIdToShow = (withChapter ? $screenToShow.parentElement.id : $activeChapter.id) + [...$screenToShow.parentElement.children].indexOf($screenToShow);
+    
+    revealChapters[revealIdToHide].out('reverse');
     
     $activeScreen.classList.add('is-hidding--next');
     const timeline = anime.timeline({
@@ -98,34 +120,34 @@ function screenNavigateNext(withChapter) {
         targets: $activeScreen,
         clipPath: ['inset(0 0 0px 0)', 'inset(0 0 '+ window.innerHeight + 'px 0)'],
         begin: function(anim) {
-            // console.log('begin anim 1')
         },
         complete: function(anim) {
             $activeScreen.classList.remove('is-active','is-hidding--next');
             withChapter && $activeChapter.classList.remove('is-active');
             $activeScreen.style.clipPath = '';
-            // console.log('complete anim 1')
         }
     }).add({
         targets: $screenToShow,
         clipPath: ['inset('+ window.innerHeight +'px 0 0 0)', 'inset(0px 0 0 0)'],
         begin: function(anim) {
-            withChapter && $activeChapter.nextElementSibling.classList.add('is-active');
+            withChapter && $screenToShow.parentElement.classList.add('is-active');
             $screenToShow.classList.add('is-active','is-showing--next');
-            // console.log('begin anim 2')
+            if (!revealChapters[revealIdToShow]) {
+                revealChapters[revealIdToShow] = new TextLinesReveal([...$screenToShow.querySelectorAll('.heading span'),...$screenToShow.querySelectorAll('.content p')]);
+            }
+            revealChapters[revealIdToShow].in('normal');
         },
         complete: function(anim) {
             $screenToShow.classList.remove('is-showing--next');
-            $activeScreen.style.clipPath = '';
+            $screenToShow.style.clipPath = '';
             $activeScreen = $screenToShow;
             if (withChapter) {
-                $activeChapter = $activeChapter.nextElementSibling;
+                $activeChapter = $screenToShow.parentElement;
                 updateNavActive();
                 updateWindowHash();
             }
             screenScrollHandler();
             isNavTransition = false;
-            // console.log('complete anim 2')
         }
     }, '-=400');
 }
@@ -135,6 +157,11 @@ function screenNavigatePrev(withChapter) {
 
     const $screenToShow = withChapter ? $activeChapter.previousElementSibling.children[$activeChapter.previousElementSibling.children.length - 1] : $activeScreen.previousElementSibling;
     
+    const revealIdToHide = $activeChapter.id + [...$activeScreen.parentElement.children].indexOf($activeScreen);
+    const revealIdToShow = (withChapter ? $screenToShow.parentElement.id : $activeChapter.id) + [...$screenToShow.parentElement.children].indexOf($screenToShow);
+    
+    revealChapters[revealIdToHide].out('normal');
+
     $activeScreen.classList.add('is-hidding--prev');
     const timeline = anime.timeline({
         duration: 800,
@@ -144,7 +171,6 @@ function screenNavigatePrev(withChapter) {
         targets: $activeScreen,
         clipPath: ['inset(0px 0 0 0)', 'inset('+ window.innerHeight +'px 0 0 0)'],
         begin: function(anim) {
-            // console.log('begin anim 1')
         },
         complete: function(anim) {
             $activeScreen.classList.remove('is-active','is-hidding--prev');
@@ -155,22 +181,25 @@ function screenNavigatePrev(withChapter) {
         targets: $screenToShow,
         clipPath: ['inset(0 0 '+ window.innerHeight + 'px 0)', 'inset(0 0 0px 0)'],
         begin: function(anim) {
-            withChapter && $activeChapter.previousElementSibling.classList.add('is-active');
+            withChapter && $screenToShow.parentElement.classList.add('is-active');
             $screenToShow.classList.add('is-active','is-showing--prev');
+            if (!revealChapters[revealIdToShow]) {
+                revealChapters[revealIdToShow] = new TextLinesReveal([...$screenToShow.querySelectorAll('.heading span'),...$screenToShow.querySelectorAll('.content p')]);
+            }
+            revealChapters[revealIdToShow].in('reverse');
         },
         complete: function(anim) {
             $screenToShow.classList.remove('is-showing--prev');
             document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
-            $activeScreen.style.clipPath = '';
+            $screenToShow.style.clipPath = '';
             $activeScreen = $screenToShow;
             if (withChapter) {
-                $activeChapter = $activeChapter.previousElementSibling;
+                $activeChapter = $screenToShow.parentElement;
                 updateNavActive();
                 updateWindowHash();
             }
             screenScrollHandler();
             isNavTransition = false;
-            // console.log('complete anim 2')
         }
     }, '-=600');
 }
@@ -180,6 +209,12 @@ window.addEventListener('hashchange', function(e) {
     if ($chapterToShow) {
         isNavTransition = true;
         let $screenToShow = $chapterToShow.children[0];
+
+        const revealIdToHide = $activeChapter.id + [...$activeScreen.parentElement.children].indexOf($activeScreen);
+        const revealIdToShow = $screenToShow.parentElement.id + [...$screenToShow.parentElement.children].indexOf($screenToShow);
+        
+        revealChapters[revealIdToHide].out('normal');
+
         const timeline = anime.timeline({
             duration: 800,
             easing: 'easeInOutExpo'
@@ -188,7 +223,6 @@ window.addEventListener('hashchange', function(e) {
             targets: $activeScreen,
             clipPath: ['inset(0 0% 0 0)', 'inset(0 100% 0 0)'],
             begin: function(anim) {
-                // console.log('begin anim 1')
             },
             complete: function(anim) {
                 $activeChapter.classList.remove('is-active');
@@ -201,16 +235,19 @@ window.addEventListener('hashchange', function(e) {
             begin: function(anim) {
                 $chapterToShow.classList.add('is-active');
                 $screenToShow.classList.add('is-active','is-showing--next');
-                // console.log('begin anim 2')
+                if (!revealChapters[revealIdToShow]) {
+                    revealChapters[revealIdToShow] = new TextLinesReveal([...$screenToShow.querySelectorAll('.heading span'),...$screenToShow.querySelectorAll('.content p')]);
+                }
+                revealChapters[revealIdToShow].in('normal');
             },
             complete: function(anim) {
                 $screenToShow.classList.remove('is-showing--next');
+                $screenToShow.style.clipPath = '';
                 $activeChapter = $chapterToShow;
                 $activeScreen = $screenToShow;
                 updateNavActive();
                 screenScrollHandler();
                 isNavTransition = false;
-                // console.log('complete anim 2')
             }
         }, '-=400')
     }
@@ -218,7 +255,6 @@ window.addEventListener('hashchange', function(e) {
 
 function updateNavActive() {
     for(let i=0; i < $navAchors.length; i++) { 
-        // console.log($navAchors[i].hash, '#' + $activeChapter.id );
         if ($navAchors[i].hash == '#' + $activeChapter.id) {
             $navAchors[i].classList.add('is-active');
         } else {
@@ -236,3 +272,30 @@ function updateWindowHash() {
         window.location.hash = '#' + $activeChapter.id;
     }
 }
+
+document.addEventListener('readystatechange', function(event) {
+    if (event.target.readyState === "complete") {
+        const revealIdToShow = $activeChapter.id + [...$activeScreen.parentElement.children].indexOf($activeScreen);
+        const timeline = anime.timeline({
+            duration: 800,
+            easing: 'easeInOutExpo'
+        });
+        timeline.add({
+            targets: $activeScreen,
+            clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'],
+            begin: function(anim) {
+                $activeChapter.classList.add('is-active');
+                $activeScreen.classList.add('is-active','is-showing--next');
+                revealChapters[revealIdToShow] = new TextLinesReveal([...$activeChapter.querySelectorAll('.heading span'),...$activeChapter.querySelectorAll('.content p')]);
+                revealChapters[revealIdToShow].in('normal');
+            },
+            complete: function(anim) {
+                $topbar.classList.add('is-sticky');
+                $activeScreen.classList.remove('is-showing--next');
+                $activeScreen.style.clipPath = '';
+                document.addEventListener('scroll', screenScrollHandler);
+                screenScrollHandler();
+            }
+        })
+    }
+});

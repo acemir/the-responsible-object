@@ -16,6 +16,7 @@
     "animejs": "^3.2.1",
     "debounce": "^1.2.1",
     "parcel-bundler": "^1.12.5",
+    "split-type": "^0.2.5",
     "xwiper": "^2.2.1"
   },
   "devDependencies": {
