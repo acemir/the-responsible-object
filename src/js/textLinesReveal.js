@@ -102,7 +102,7 @@ export class TextLinesReveal {
               wrapEl.appendChild(char);
 
               if (this.isVisible) {
-                  char.style.transform = '';
+                  char.style.transform = 'translateY(0%) rotate(0deg)';
               }
           });
       }
