@@ -33,7 +33,6 @@ function topbarScrollHandler(e) {
     $topbar.classList.remove('is-sticky');
     document.removeEventListener('scroll', topbarScrollHandler);
 }
-document.addEventListener('scroll', topbarScrollHandler);
 
 let allowNavPrev = false;
 let allowNavNext = false;
@@ -293,7 +292,9 @@ document.addEventListener('readystatechange', function(event) {
                 $topbar.classList.add('is-sticky');
                 $activeScreen.classList.remove('is-showing--next');
                 $activeScreen.style.clipPath = '';
+                document.addEventListener('scroll', topbarScrollHandler);
                 document.addEventListener('scroll', screenScrollHandler);
+                window.addEventListener('resize', screenScrollHandler);
                 screenScrollHandler();
             }
         })
