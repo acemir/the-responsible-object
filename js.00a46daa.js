@@ -3157,7 +3157,7 @@ var TextLinesReveal = /*#__PURE__*/function () {
         wrapEl.appendChild(char);
 
         if (_this2.isVisible) {
-          char.style.transform = '';
+          char.style.transform = 'translateY(0%) rotate(0deg)';
         }
       });
     }
