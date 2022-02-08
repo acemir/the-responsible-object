@@ -3223,6 +3223,7 @@ function topbarScrollHandler(e) {
   document.removeEventListener('scroll', topbarScrollHandler);
 }
 
+$topbar.style.transition = 'unset';
 var allowNavPrev = false;
 var allowNavNext = false;
 var isNavTransition = false;
@@ -3490,6 +3491,7 @@ document.addEventListener('readystatechange', function (event) {
         revealChapters[revealIdToShow].in('normal');
       },
       complete: function complete(anim) {
+        $topbar.style.transition = '';
         $topbar.classList.add('is-sticky');
         $activeScreen.classList.remove('is-showing--next');
         $activeScreen.style.clipPath = '';
