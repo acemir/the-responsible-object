@@ -34,6 +34,8 @@ function topbarScrollHandler(e) {
     document.removeEventListener('scroll', topbarScrollHandler);
 }
 
+$topbar.style.transition = 'unset';
+
 let allowNavPrev = false;
 let allowNavNext = false;
 let isNavTransition = false;
@@ -289,6 +291,7 @@ document.addEventListener('readystatechange', function(event) {
                 revealChapters[revealIdToShow].in('normal');
             },
             complete: function(anim) {
+                $topbar.style.transition = '';
                 $topbar.classList.add('is-sticky');
                 $activeScreen.classList.remove('is-showing--next');
                 $activeScreen.style.clipPath = '';
